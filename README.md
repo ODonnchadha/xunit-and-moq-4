@@ -1,9 +1,9 @@
 ## Mocking with Moq 4 and xUnit
 - by Jason Roberts
- - Writing unit tests is hard when dependencies between classes make it tough to separate what's being tested from the rest of the system. 
- - Moq, the most popular mocking library for .NET, makes it easy to create mock dependencies to make testing easier.
 
 - OVERVIEW:
+    - Writing unit tests is hard when dependencies between classes make it tough to separate what's being tested from the rest of the system. 
+    - Moq, the most popular mocking library for .NET, makes it easy to create mock dependencies to make testing easier.
     - Methods. Properties. Throwing events and exceptions.
 
 - GETTING STARTED WITH MOCKING & MOQ:
@@ -40,8 +40,44 @@
     - SUMMARY: Isolation using test-time -only dependencies.
 
 - CONFIGURING MOCKED METHODS:
-    - 
+    - Install Moq.
+    - Argument matching: (Predicate: Function that returns a boolean result.)
+        ```csharp
+            m.Setup(m => m.IsValid("x")).Returns(true);
+            m.Setup(m => m.IsValid(It.IsAny<string>())).Returns(true);
+            m.Setup(m => m.IsValid(It.Is<string>(number => number.StartsWith("x")))).Returns(true);
+            m.Setup(m => m.IsValid(It.IsInRange<string>("x", "z", Moq.Range.Inclusive))).Returns(true);
+            m.Setup(m => m.IsValid(It.IsIn("x", "y", "z"))).Returns(true);
+            m.Setup(m => m.IsValid(It.IsRegex("[x-z]"))).Returns(true);
+        ```
+    - Strict and loose mocks. By default, a loose Mock will be created.
+        - MockBehavior.Strict. Throw an exception if a mocked method is called but has not been set up.
+        - MockBehavior.Loose. Never throw exceptions, even if a mocked method is called but has not been set up.
+        - MockBehavior.Loose. Return default values for value types, null for reference types, ampty array/enumerable.
+        - MockBehavior.Default:
+    - Mock methods with 'out' parameters.
+    - Argument matching: (Predicate: Function that returns a boolean result.)
+        ```csharp
+            var person1 = new Person();
+            var person2 = new Person();
+            var gateway = new Mock<IGateway>();
+            gateway.Setup(g => g.Execute(ref person1)).Returns(-1);
+
+            var sut = new Processor(gateway.Object);
+            Assert.Equal(-1, sut.Process(person1);
+            Assert.Equal(0, sut.Process(person2);
+        ```
+        ```csharp
+            var gateway = new Mock<IGateway>();
+            gateway.Setup(g => g.Execute(ref It.Ref<Person>.IsAny)).Returns(-1);
+            Assert.Equal(-1, sut.Process(person1);
+            Assert.Equal(-1, sut.Process(person2);
+        ```
+    - SUMMARY:
 
 - CONFIGURING MOCK OBJECT PROPERTIES:
+    - Configure a mocked property. Either a literal value or a function return value.
+    - Auto-mocking of property hierarchies.
+
 - IMPLEMENTATING BEHAVIOR VERFICATION TESTS:
 - USING ADDITIONAL MOQ MOCKING TECHNIQUES:

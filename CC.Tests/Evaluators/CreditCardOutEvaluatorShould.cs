@@ -5,20 +5,21 @@ using Moq;
 
 namespace CC.Tests.Evaluators
 {
-    public class CreditCardEvaluatorShould
+    public class CreditCardOutEvaluatorShould
     {
         private Mock<IFrequentFlyerNumberValidator> validator;
-        public CreditCardEvaluatorShould() => 
-            this.validator = new Mock<IFrequentFlyerNumberValidator>(
-            MockBehavior.Strict);
+        public CreditCardOutEvaluatorShould() =>
+            this.validator = new Mock<IFrequentFlyerNumberValidator>();
 
         [Fact()]
         public void AcceptHighGrossAnnualIncome()
         {
-            validator.Setup(v => v.IsValid(
-                It.IsAny<string>())).Returns(true);
+            var isValid = true;
 
-            var sut = new CreditCardEvaluator(validator.Object);
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>(), out isValid));
+
+            var sut = new CreditCardOutEvaluator(validator.Object);
 
             Assert.Equal(CreditCardStatus.AutoAccepted, sut.Evaluate(
                 new CreditCard
@@ -30,10 +31,12 @@ namespace CC.Tests.Evaluators
         [Fact()]
         public void ReferYoungCreditCardApplication()
         {
-            validator.Setup(v => v.IsValid(
-                It.IsAny<string>())).Returns(true);
+            var isValid = true;
 
-            var sut = new CreditCardEvaluator(validator.Object);
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>(), out isValid));
+
+            var sut = new CreditCardOutEvaluator(validator.Object);
 
             Assert.Equal(CreditCardStatus.ReferredToHuman, sut.Evaluate(
                 new CreditCard
@@ -45,16 +48,18 @@ namespace CC.Tests.Evaluators
         [Fact()]
         public void DeclineLowIncomeAPplications()
         {
-            validator.Setup(v => v.IsValid(
-                It.IsAny<string>())).Returns(true);
+            var isValid = true;
 
-            var sut = new CreditCardEvaluator(validator.Object);
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>(), out isValid));
+
+            var sut = new CreditCardOutEvaluator(validator.Object);
 
             var status = sut.Evaluate(
                 new CreditCard
                 {
                     GrossAnnualIncome = 19_999,
-                    Age= 42,
+                    Age = 42,
                     FrequentFlyerNumber = "x"
                 });
 
@@ -64,12 +69,14 @@ namespace CC.Tests.Evaluators
         [Fact()]
         public void ReferInvalidFrequestFlyerApplications()
         {
+            var isValid = false;
+
             validator.Setup(v => v.IsValid(
-                It.IsAny<string>())).Returns(false);
+                It.IsAny<string>(), out isValid));
 
-            var sut = new CreditCardEvaluator(validator.Object);
+            var sut = new CreditCardOutEvaluator(validator.Object);
 
-            Assert.Equal(CreditCardStatus.ReferredToHuman, 
+            Assert.Equal(CreditCardStatus.ReferredToHuman,
                 sut.Evaluate(
                     new CreditCard
                     {
