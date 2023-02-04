@@ -76,8 +76,24 @@
     - SUMMARY:
 
 - CONFIGURING MOCK OBJECT PROPERTIES:
-    - Configure a mocked property. Either a literal value or a function return value.
-    - Auto-mocking of property hierarchies.
+    - Configure a mocked property. Either a literal value or a function return value:
+        ```csharp
+            validator.Setup(v => v.LicenseKey).Returns("EXPIRED");
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+        ```
+    - Auto-mocking of property hierarchies:
+        - Whan a mock can actually be created from a reference type: Interfaces. Abstract class. Non-sealed class.
+            ```csharp
+                MockObject.DefaultValue = DefaultValue.Mock;
+            ```
+    - By default, Mock properties do not recall changes made to them. NOTE: Use SetupAllProperties() before specific property setup.
+        ```csharp
+            validator.SetupProperty(v => v.ValidationMode);
+            validator.SetupAllProperties();
+        ```
+    - SUMMARY:
 
 - IMPLEMENTATING BEHAVIOR VERFICATION TESTS:
+    - Behavior testing versus state-based testing. Verify a method was called. Add custom error messages. Etc.
+
 - USING ADDITIONAL MOQ MOCKING TECHNIQUES:

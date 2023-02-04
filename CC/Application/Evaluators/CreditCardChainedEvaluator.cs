@@ -3,15 +3,16 @@ using Application.Models;
 
 namespace Application.Evaluators
 {
-    public class CreditCardEvaluator
+    public class CreditCardChainedEvaluator
     {
-        private readonly IFrequentFlyerNumberValidator validator;
+        private readonly IChainedFrequentFlyerNumberValidator validator;
 
         private const int AutoReferralMaxAge = 20;
         private const int HighIncomeThreshold = 100_000;
         private const int LowIncomeThreshold = 20_000;
 
-        public CreditCardEvaluator(IFrequentFlyerNumberValidator validator) =>
+        public CreditCardChainedEvaluator(
+            IChainedFrequentFlyerNumberValidator validator) =>
             this.validator = validator;
 
         public CreditCardStatus Evaluate(CreditCard card)
@@ -21,10 +22,15 @@ namespace Application.Evaluators
                 return CreditCardStatus.AutoAccepted;
             }
 
-            if (validator.LicenseKey.Equals("EXPIRED"))
+            if (validator.ServiceInformation.License.Equals("EXPIRED"))
             {
                 return CreditCardStatus.ReferredToHuman;
             }
+
+            validator.ValidationMode = 
+                card.Age >= 30 ? 
+                ValidationMode.Detailed : 
+                ValidationMode.Quick;
 
             if (!validator.IsValid(card.FrequentFlyerNumber))
             {

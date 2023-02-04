@@ -32,6 +32,7 @@ namespace CC.Tests.Evaluators
         {
             validator.Setup(v => v.IsValid(
                 It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
 
             var sut = new CreditCardEvaluator(validator.Object);
 
@@ -47,6 +48,7 @@ namespace CC.Tests.Evaluators
         {
             validator.Setup(v => v.IsValid(
                 It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
 
             var sut = new CreditCardEvaluator(validator.Object);
 
@@ -66,6 +68,7 @@ namespace CC.Tests.Evaluators
         {
             validator.Setup(v => v.IsValid(
                 It.IsAny<string>())).Returns(false);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
 
             var sut = new CreditCardEvaluator(validator.Object);
 
@@ -75,5 +78,44 @@ namespace CC.Tests.Evaluators
                     {
                     }));
         }
+
+        [Fact()]
+        public void ReferWhenLicenseKeyExpiredLiteral()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns("EXPIRED");
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            Assert.Equal(CreditCardStatus.ReferredToHuman,
+                sut.Evaluate(
+                    new CreditCard
+                    {
+                        GrossAnnualIncome = 19_999
+                    }));
+        }
+
+        [Fact()]
+        public void ReferWhenLicenseKeyExpiredFunction()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            // Note: Execution deferred.
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            Assert.Equal(CreditCardStatus.AutoDeclined,
+                sut.Evaluate(
+                    new CreditCard
+                    {
+                        GrossAnnualIncome = 19_999,
+                        Age = 42,
+                        FrequentFlyerNumber = "x"
+                    }));
+        }
+
+        private string GetLicenseKey() => "VALID";
     }
 }

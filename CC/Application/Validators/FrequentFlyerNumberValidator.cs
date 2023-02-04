@@ -4,14 +4,12 @@ namespace Application.Validators
 {
     public class FrequentFlyerNumberValidator : IFrequentFlyerNumberValidator
     {
-        public bool IsValid(string number)
-        {
-            throw new NotImplementedException();
-        }
+        public string LicenseKey { get; } = "LICENSE_KEY";
 
-        public bool IsValid(string number, out bool isValid)
-        {
+        public bool IsValid(string number) =>
             throw new NotImplementedException();
-        }
+
+        public bool IsValid(string number, out bool isValid) =>
+            throw new NotImplementedException();
     }
 }
