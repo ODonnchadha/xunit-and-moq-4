@@ -79,6 +79,8 @@
     - Configure a mocked property. Either a literal value or a function return value:
         ```csharp
             validator.Setup(v => v.LicenseKey).Returns("EXPIRED");
+
+            // Note: Execution deferred.
             validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
         ```
     - Auto-mocking of property hierarchies:
@@ -94,6 +96,33 @@
     - SUMMARY:
 
 - IMPLEMENTATING BEHAVIOR VERFICATION TESTS:
-    - Behavior testing versus state-based testing. Verify a method was called. Add custom error messages. Etc.
+    - Behavior testing versus state-based testing.
+        - State-based testing: SUT interacts with the mock object. 
+            - Read the result of the method call and make an assert against it.
+            - Asserts check the SUT.
+        - Behavior: Check the mock object. Was a method called? Was a property accessed?
+        - e.g.: Product cache. Invalidated. From DB or from cache? 
+        - Mock DB. Cache asks for information via Mock DB. And we write tests validating the Db call.
+    - Verify a method was called. With custom error message.
+        ```csharp
+            // Behavior testing. Expected invocation on the mock.
+            validator.Verify(v => v.IsValid(SPECIFIC_VALUE), $"Invalid FrequentFlyerNumber: {SPECIFIC_VALUE}");
+
+            validator.Verify(v => v.IsValid(It.IsAny<string>()), Times.Never);
+            validator.VerifyGet(v => v.LicenseKey, Times.Never);
+            validator.VerifySet(v => v.ValidationMode = ValidationMode.Detailed);
+            validator.VerifyNoOtherCalls();
+        ```
+    - SUMMARY:
 
 - USING ADDITIONAL MOQ MOCKING TECHNIQUES:
+    - Throw exceptions from Mock objects:
+    - Raising Events:
+        - Manually:
+        - Automatically:
+    - Return different results for sequential calls:
+    - Mock virtual (protected) members of concrete types:
+    - Improve mock setup readability with LINQ:
+    - Refactor:
+    - Generic Type argument matching:
+    - Mocking async method return values:

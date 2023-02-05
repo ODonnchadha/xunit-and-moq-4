@@ -117,5 +117,56 @@ namespace CC.Tests.Evaluators
         }
 
         private string GetLicenseKey() => "VALID";
+
+        [Fact()]
+        public void ValidateFrequentFlyerNumberForLowIncomepApplications()
+        {
+            string SPECIFIC_VALUE = "x";
+
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard 
+            { 
+                FrequentFlyerNumber = SPECIFIC_VALUE 
+            });
+
+            validator.Verify(v => v.IsValid(SPECIFIC_VALUE), 
+                $"Invalid FrequentFlyerNumber: {SPECIFIC_VALUE}");
+        }
+
+        [Fact()]
+        public void NotValidateFrequentFlyerNumberForHighIncomepApplications()
+        {
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard
+            {
+                GrossAnnualIncome = 100_000
+            });
+
+            validator.Verify(v => v.IsValid(It.IsAny<string>()), Times.Never);
+        }
+
+        [Fact()]
+        public void CheckLicenseKeyForLowIncomepApplications()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard
+            {
+                GrossAnnualIncome = 100_001
+            });
+
+            validator.VerifyGet(v => v.LicenseKey, Times.Never);
+            validator.VerifyNoOtherCalls();
+        }
     }
 }

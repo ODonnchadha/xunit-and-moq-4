@@ -3,7 +3,6 @@ using Application.Interfaces.ChainedValidators;
 using Application.Interfaces.Validators;
 using Application.Models;
 using Moq;
-using System.ComponentModel.DataAnnotations;
 
 namespace CC.Tests.Evaluators
 {
@@ -167,5 +166,25 @@ namespace CC.Tests.Evaluators
         }
 
         private string GetLicenseKey() => "VALID";
+
+        [Fact()]
+        public void SetDetailedLookupForOlderApplications()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            validator.Setup(
+                v => v.ServiceInformation.License.LicenseKey).Returns(
+                GetLicenseKey);
+
+            var sut = new CreditCardChainedEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard
+            {
+                Age = 30
+            });
+
+            validator.VerifySet(
+                v => v.ValidationMode = ValidationMode.Detailed);
+        }
     }
 }
