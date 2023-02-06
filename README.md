@@ -119,6 +119,9 @@
     - Throw exceptions from Mock objects:
     - Raising Events:
         - Manually:
+            ```csharp
+                validator.Raise(v => v.CountPerformed += null, EventArgs.Empty);
+            ```
         - Automatically:
     - Return different results for sequential calls:
     - Mock virtual (protected) members of concrete types:

@@ -10,9 +10,14 @@ namespace Application.Evaluators
         private const int AutoReferralMaxAge = 20;
         private const int HighIncomeThreshold = 100_000;
         private const int LowIncomeThreshold = 20_000;
-
-        public CreditCardEvaluator(IFrequentFlyerNumberValidator validator) =>
+        public int Count { get; private set; }
+        public CreditCardEvaluator(IFrequentFlyerNumberValidator validator)
+        {
             this.validator = validator;
+            this.validator.CountPerformed += CountPerformed;
+        }
+
+        private void CountPerformed(object? sender, EventArgs e) => Count++;
 
         public CreditCardStatus Evaluate(CreditCard card)
         {
@@ -26,7 +31,18 @@ namespace Application.Evaluators
                 return CreditCardStatus.ReferredToHuman;
             }
 
-            if (!validator.IsValid(card.FrequentFlyerNumber))
+            bool isValid;
+
+            try
+            {
+                isValid = validator.IsValid(card.FrequentFlyerNumber);
+            }
+            catch
+            {
+                return CreditCardStatus.ReferredToHuman;
+            }
+
+            if (!isValid)
             {
                 return CreditCardStatus.ReferredToHuman;
             }

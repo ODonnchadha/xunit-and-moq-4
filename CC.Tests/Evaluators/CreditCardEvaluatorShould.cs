@@ -166,7 +166,83 @@ namespace CC.Tests.Evaluators
             });
 
             validator.VerifyGet(v => v.LicenseKey, Times.Never);
-            validator.VerifyNoOtherCalls();
+            // validator.VerifyNoOtherCalls();
+        }
+
+        [Fact()]
+        public void ReferWhenFrequentFlyerValidationError()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Throws<Exception>();
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            Assert.Equal(CreditCardStatus.ReferredToHuman, sut.Evaluate(
+                new CreditCard
+                    {
+                        Age = 42
+                    })
+                );
+        }
+
+        [Fact()]
+        public void ReferWhenFrequentFlyerValidationCustomExceptionError()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Throws(
+                    new Exception("IsValid Exception"));
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            Assert.Equal(CreditCardStatus.ReferredToHuman, sut.Evaluate(
+                new CreditCard
+                {
+                    Age = 42
+                })
+            );
+        }
+
+        [Fact()]
+        public void IncrementCountViaManualEvent()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>())).Returns(true);
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard
+            {
+                FrequentFlyerNumber = "x",
+                Age = 25
+            });
+
+            validator.Raise(v => v.CountPerformed += null, EventArgs.Empty);
+
+            Assert.Equal(1, sut.Count);
+        }
+
+        [Fact()]
+        public void IncrementCountViaAutomaticEvent()
+        {
+            validator.Setup(v => v.IsValid(
+                It.IsAny<string>()))
+                .Returns(true)
+                .Raises(v => v.CountPerformed += null, EventArgs.Empty);
+
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            sut.Evaluate(new CreditCard
+            {
+                FrequentFlyerNumber = "x",
+                Age = 25
+            });
+
+            Assert.Equal(1, sut.Count);
         }
     }
 }
