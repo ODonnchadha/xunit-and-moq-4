@@ -244,5 +244,87 @@ namespace CC.Tests.Evaluators
 
             Assert.Equal(1, sut.Count);
         }
+
+        [Fact()]
+        public void ReferInvalidFrequentFlyerApplications_ReturnValuesSequence()
+        {
+            validator.SetupSequence(v => v.IsValid(
+                It.IsAny<string>()))
+                .Returns(false).Returns(true);
+
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            var application = new CreditCard
+            {
+                FrequentFlyerNumber = "x",
+                Age = 25
+            };
+
+            var decision1 = sut.Evaluate(application);
+            Assert.Equal(CreditCardStatus.ReferredToHuman, decision1);
+
+            var decision2 = sut.Evaluate(application);
+            Assert.Equal(CreditCardStatus.AutoDeclined, decision2);
+        }
+
+        [Fact()]
+        public void ReferInvalidFrequentFlyerApplications_MultipleCallsSequence()
+        {
+            var numbers = new List<string>();
+
+            validator.Setup(v => v.IsValid(Capture.In(numbers)));
+            validator.Setup(v => v.LicenseKey).Returns(GetLicenseKey);
+
+            var sut = new CreditCardEvaluator(validator.Object);
+
+            var application1 = new CreditCard
+            {
+                FrequentFlyerNumber = "xx",
+                Age = 25
+            };
+            var application2 = new CreditCard
+            {
+                FrequentFlyerNumber = "yy",
+                Age = 25
+            };
+            var application3 = new CreditCard
+            {
+                FrequentFlyerNumber = "zz",
+                Age = 25
+            };
+
+            sut.Evaluate(application1);
+            sut.Evaluate(application2);
+            sut.Evaluate(application3);
+
+            Assert.Equal(
+                new List<string>
+                    {
+                        "xx", "yy", "zz"
+                    },
+                numbers);
+        }
+
+        [Fact()]
+        public void LinqToMocks()
+        {
+            var validator = Mock.Of<IFrequentFlyerNumberValidator>
+                (
+                    v => 
+                    v.LicenseKey == GetLicenseKey() &&
+                    v.IsValid(It.IsAny<string>()) == true
+                );
+
+            var sut = new CreditCardEvaluator(validator);
+
+            Assert.Equal(CreditCardStatus.AutoDeclined, sut.Evaluate(
+                new CreditCard
+                {
+                    Age = 25
+                })
+            );
+        }
     }
 }

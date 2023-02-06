@@ -124,8 +124,47 @@
             ```
         - Automatically:
     - Return different results for sequential calls:
-    - Mock virtual (protected) members of concrete types:
+    - Mock virtual members of concrete types:
+        - Non-overrideable members may not be used in setup/verification expressions.
+     - Mock protected members of concrete types:   
+        ```csharp
+            fraud.Protected().Setup<bool>("PROTECTED_METHOD_NAME", ItExpr.IsAny<CreditCard>()).Returns(true);
+        ```
     - Improve mock setup readability with LINQ:
+        ```csharp
+            var validator = Mock.Of<IFrequentFlyerNumberValidator>
+                (
+                    v => 
+                    v.LicenseKey == GetLicenseKey() &&
+                    v.IsValid(It.IsAny<string>()) == true
+                );
+            var sut = new CreditCardEvaluator(validator);
+        ```
     - Refactor:
+        - Constructor: xunit creates a new instance of the test class for each test method.
     - Generic Type argument matching:
+        - e.g.:
+            ```csharp
+                public interface IDemoInterface { bool IsOdd<T>(T number); }
+
+                var mock = new Mock<IDemoInterface>();
+                // NOTE: C# has inferred generic type.
+                mock.Setup(m => m.IsOdd(1)).Returns(true);
+                // NOTE: Any <int> returns true.
+                mock.Setup(m => m.IsOdd(It.IsAny<int>())).Returns(true);
+                // NOTE: Any type. Any.
+                mock.Setup(m => m.IsOdd(It.IsAny<It.IsAnyType>())).Returns(true);
+                // NOTE: mock.Object.IsOdd(new Exception()) returns false; Setup for or type or derived subtype.
+                mock.Setup(m => m.IsOdd(It.IsAny<It.IsSubtype<ApplicationException>>())).Returns(true);
+            ```
     - Mocking async method return values:
+        - e.g.:
+            ```csharp
+                public interface IDemoInterfaceAsync {Task StartAsync(); Task<int> StopAsync(); }
+
+                var mock = new Mock<IDemoInterfaceAsync>();
+                mock.Setup(m => m.StartAsync()).Returns(Task.CompletedTask);
+                mock.Setup(m => m.StopAsync()).Returns(Task.FromResult(42));
+                mock.Setup(m => m.StopAsync()).ReturnsAsync(42);
+            ```
+    - SUMMARY:
